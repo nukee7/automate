@@ -1,12 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import http from 'http';
-import { Server } from 'socket.io';
 
 import authRoutes from './routes/auth.route';
 import executionRoutes from './routes/execution.route';
+import workflowRoutes from './routes/workflow.route';
 
 import { initSocket } from './config/socket';
+import type { Socket } from 'socket.io';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ export const io = initSocket(server);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/executions', executionRoutes);
+app.use('/api/workflows', workflowRoutes);
 
 app.get('/', (_, res) => {
   res.send('TaskPilot API Running');

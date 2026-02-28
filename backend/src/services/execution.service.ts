@@ -7,12 +7,11 @@ export class ExecutionService {
   private executor: WorkflowExecutor;
 
   constructor() {
-    const executionEmitter = new SocketWorkflowEmitter();
-    this.executor = new WorkflowExecutor(executionEmitter);
+    const emitter = new SocketWorkflowEmitter();
+    this.executor = new WorkflowExecutor(emitter);
   }
 
   async start(workflowId: string, userId: string) {
-    // 1️⃣ Fetch workflow
     const workflow = await prisma.workflow.findUnique({
       where: { id: workflowId },
     });
@@ -28,7 +27,7 @@ export class ExecutionService {
     const definition =
       workflow.definition as unknown as WorkflowDefinition;
 
-    // 2️⃣ Create execution record (RUNNING)
+    // 1️⃣ Create execution record first
     const execution = await prisma.execution.create({
       data: {
         workflowId,
@@ -37,39 +36,37 @@ export class ExecutionService {
       },
     });
 
-    try {
-      // 3️⃣ Execute workflow
-      const result = await this.executor.execute(
-        definition,
-        userId
-      );
+    // 2️⃣ Fire background execution (non-blocking)
+    setImmediate(async () => {
+      try {
+        const result = await this.executor.execute(
+          definition,
+          userId
+        );
 
-      // 4️⃣ Update execution as COMPLETED
-      await prisma.execution.update({
-        where: { id: execution.id },
-        data: {
-          status: 'COMPLETED',
-          data: result.data,
-          logs: result.logs,
-          completedAt: new Date(),
-        },
-      });
+        await prisma.execution.update({
+          where: { id: execution.id },
+          data: {
+            status: 'COMPLETED',
+            data: result.data,
+            logs: result.logs,
+            completedAt: new Date(),
+          },
+        });
 
-      return execution.id;
+      } catch (error: any) {
+        await prisma.execution.update({
+          where: { id: execution.id },
+          data: {
+            status: 'FAILED',
+            logs: { error: error.message },
+            completedAt: new Date(),
+          },
+        });
+      }
+    });
 
-    } catch (error: any) {
-
-      // 5️⃣ Update execution as FAILED
-      await prisma.execution.update({
-        where: { id: execution.id },
-        data: {
-          status: 'FAILED',
-          logs: { error: error.message },
-          completedAt: new Date(),
-        },
-      });
-
-      throw error;
-    }
+    // 3️⃣ Return immediately
+    return execution.id;
   }
 }
