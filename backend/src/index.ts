@@ -1,26 +1,49 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server } from 'socket.io';
 
 import authRoutes from './routes/auth.route';
+import executionRoutes from './routes/execution.route';
 
 dotenv.config();
 
 const app = express();
-
-// Middleware
 app.use(express.json());
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Create Socket.IO server
+export const io = new Server(server, {
+  cors: {
+    origin: '*', // restrict in production
+  },
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/executions', executionRoutes);
 
-// Health check route
-app.get('/', (_req: Request, res: Response) => {
-  res.status(200).send('TaskPilot API Running');
+app.get('/', (_, res) => {
+  res.send('TaskPilot API Running');
 });
 
-// Start server
-const PORT: number = Number(process.env.PORT) || 8000;
+// Socket Handler
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  socket.on('execution:subscribe', (executionId: string) => {
+    socket.join(executionId);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
+const PORT = process.env.PORT || 8000;
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on ${PORT}`);
 });

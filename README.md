@@ -21,3 +21,14 @@ For each node:
   store output
      ↓
 Return context
+
+How execution works(node level) with emitter:
+for each node:
+  emit START event
+  try:
+    retry N times:
+      run node
+    emit SUCCESS event
+  catch:
+    emit FAILURE event
+    apply failure policy

@@ -25,6 +25,7 @@ build/
 # Prisma
 # =========================
 prisma/migrations/**/migration_lock.toml
+prisma/generate/
 
 # Prisma Studio
 .prisma/
