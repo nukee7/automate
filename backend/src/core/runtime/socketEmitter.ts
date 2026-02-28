@@ -1,7 +1,7 @@
-import { ExecutionEmitter } from './emitter';
-import { io } from '../../index';
+import { WorkflowExecutionEmitter } from './emitter';
+import { getIO } from '../../config/socket';
 
-export class SocketEmitter implements ExecutionEmitter {
+export class SocketWorkflowEmitter implements WorkflowExecutionEmitter {
   emit(
     executionId: string,
     event: {
@@ -11,6 +11,6 @@ export class SocketEmitter implements ExecutionEmitter {
       error?: string;
     }
   ) {
-    io.to(executionId).emit('execution:update', event);
+    getIO().to(executionId).emit('execution:update', event);
   }
 }

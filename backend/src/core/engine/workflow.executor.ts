@@ -2,11 +2,11 @@ import { WorkflowDefinition } from '../types/workflow';
 import { nodeRegistry } from '../registry/node.registry';
 import { ExecutionContext } from '../runtime/context';
 import { randomUUID } from 'crypto';
-import { ExecutionEmitter } from '../runtime/emitter';
+import { WorkflowExecutionEmitter } from '../runtime/emitter';
 
 export class WorkflowExecutor {
   constructor(
-    private emitter?: ExecutionEmitter
+    private executionEmitter?: WorkflowExecutionEmitter
   ) { }
 
   async execute(
@@ -34,7 +34,7 @@ export class WorkflowExecutor {
       const retryCount = node.config?.retry ?? 0;
       const onFailure = node.config?.onFailure ?? 'STOP';
 
-      this.emitter?.emit(context.executionId, {
+      this.executionEmitter?.emit(context.executionId, {
         nodeId: node.id,
         status: 'STARTED',
       });
@@ -57,7 +57,7 @@ export class WorkflowExecutor {
 
           context.data[node.id] = output;
 
-          this.emitter?.emit(context.executionId, {
+          this.executionEmitter?.emit(context.executionId, {
             nodeId: node.id,
             status: 'SUCCESS',
             output,
@@ -73,7 +73,7 @@ export class WorkflowExecutor {
       }
 
       if (!success) {
-        this.emitter?.emit(context.executionId, {
+        this.executionEmitter?.emit(context.executionId, {
           nodeId: node.id,
           status: 'FAILED',
           error: lastError?.message,

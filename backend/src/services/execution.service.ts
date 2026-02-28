@@ -1,14 +1,14 @@
 import prisma from '../config/prisma';
 import { WorkflowExecutor } from '../core/engine/workflow.executor';
 import { WorkflowDefinition } from '../core/types/workflow';
-import { SocketEmitter } from '../core/runtime/socketEmitter';
+import { SocketWorkflowEmitter } from '../core/runtime/socketEmitter';
 
 export class ExecutionService {
   private executor: WorkflowExecutor;
 
   constructor() {
-    const emitter = new SocketEmitter();
-    this.executor = new WorkflowExecutor(emitter);
+    const executionEmitter = new SocketWorkflowEmitter();
+    this.executor = new WorkflowExecutor(executionEmitter);
   }
 
   async start(workflowId: string, userId: string) {

@@ -6,6 +6,8 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/auth.route';
 import executionRoutes from './routes/execution.route';
 
+import { initSocket } from './config/socket';
+
 dotenv.config();
 
 const app = express();
@@ -14,12 +16,8 @@ app.use(express.json());
 // Create HTTP server
 const server = http.createServer(app);
 
-// Create Socket.IO server
-export const io = new Server(server, {
-  cors: {
-    origin: '*', // restrict in production
-  },
-});
+// Initialize Socket.IO
+export const io = initSocket(server);
 
 // Routes
 app.use('/api/auth', authRoutes);

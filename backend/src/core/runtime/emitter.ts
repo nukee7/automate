@@ -1,5 +1,5 @@
 // this is used by websocket to show real time updates
-export interface ExecutionEmitter {
+export interface WorkflowExecutionEmitter {
   emit(
     executionId: string,
     event: {
