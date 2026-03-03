@@ -1,21 +1,22 @@
 import { WorkflowDefinition } from '../types/workflow';
 import { nodeRegistry } from '../registry/node.registry';
 import { ExecutionContext } from '../runtime/context';
-import { randomUUID } from 'crypto';
-import { WorkflowExecutionEmitter } from '../runtime/emitter';
+import { SocketWorkflowEmitter } from '../runtime/socketEmitter';
 
 export class WorkflowExecutor {
+
   constructor(
-    private executionEmitter?: WorkflowExecutionEmitter
-  ) { }
+    private emitter: SocketWorkflowEmitter
+  ) {}
 
   async execute(
     workflow: WorkflowDefinition,
     userId: string,
-    executionId?: string
+    executionId: string
   ): Promise<ExecutionContext> {
+
     const context: ExecutionContext = {
-      executionId: executionId || randomUUID(),
+      executionId,
       userId,
       data: {},
       logs: [],
@@ -26,30 +27,28 @@ export class WorkflowExecutor {
     const sortedNodes = this.topologicalSort(workflow);
 
     for (const node of sortedNodes) {
+
       const implementation = nodeRegistry.get(node.type);
-
-      if (!implementation) {
-        throw new Error(`No implementation for node ${node.type}`);
-      }
-
-      const retryCount = node.config?.retry ?? 0;
-      const onFailure = node.config?.onFailure ?? 'STOP';
-
-      this.executionEmitter?.emit(context.executionId, {
-        nodeId: node.id,
-        status: 'STARTED',
-      });
+      const maxRetries = node.config?.retries ?? 0;
 
       let attempt = 0;
       let success = false;
-      let lastError: any;
 
-      while (attempt <= retryCount && !success) {
+      while (attempt <= maxRetries && !success) {
+        attempt++;
+
         try {
-          attempt++;
+
           context.logs.push(
             `Executing node ${node.id}, attempt ${attempt}`
           );
+
+          // 🔵 Emit node STARTED
+          this.emitter.emit(executionId, {
+            kind: "node",
+            nodeId: node.id,
+            status: "STARTED"
+          });
 
           const output = await implementation.run(
             context,
@@ -58,36 +57,42 @@ export class WorkflowExecutor {
 
           context.data[node.id] = output;
 
-          this.executionEmitter?.emit(context.executionId, {
+          context.logs.push(`Node ${node.id} completed`);
+
+          // 🟢 Emit node SUCCESS
+          this.emitter.emit(executionId, {
+            kind: "node",
             nodeId: node.id,
-            status: 'SUCCESS',
-            output,
+            status: "SUCCESS",
+            output
           });
 
           success = true;
+
         } catch (error: any) {
-          lastError = error;
+
           context.logs.push(
-            `Node ${node.id} failed on attempt ${attempt}: ${error.message}`
+            `Node ${node.id} failed: ${error.message}`
           );
-        }
-      }
 
-      if (!success) {
-        this.executionEmitter?.emit(context.executionId, {
-          nodeId: node.id,
-          status: 'FAILED',
-          error: lastError?.message,
-        });
+          if (attempt > maxRetries) {
 
-        if (onFailure === 'STOP') {
-          throw lastError;
+            // 🔴 Emit node FAILED
+            this.emitter.emit(executionId, {
+              kind: "node",
+              nodeId: node.id,
+              status: "FAILED",
+              error: error.message
+            });
+
+            throw error;
+          }
         }
-        // CONTINUE → move to next node
       }
     }
 
     context.logs.push('Execution completed');
+
     return context;
   }
 
@@ -107,17 +112,25 @@ export class WorkflowExecutor {
 
     const dfs = (nodeId: string) => {
       if (visited.has(nodeId)) return;
+
       visited.add(nodeId);
 
-      for (const neighbor of adjacency.get(nodeId) || []) {
+      const neighbors = adjacency.get(nodeId) || [];
+
+      for (const neighbor of neighbors) {
         dfs(neighbor);
       }
 
       const node = nodes.find(n => n.id === nodeId);
-      if (node) result.unshift(node);
+      if (node) {
+        result.unshift(node);
+      }
     };
 
-    for (const node of nodes) dfs(node.id);
+    for (const node of nodes) {
+      dfs(node.id);
+    }
+
     return result;
   }
 }

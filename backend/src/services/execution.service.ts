@@ -23,7 +23,6 @@ export class ExecutionService {
 
     const executionId = randomUUID();
 
-    // Create execution record first
     await prisma.execution.create({
       data: {
         workflowId,
@@ -33,7 +32,14 @@ export class ExecutionService {
       }
     });
 
-    // Run async
+    // Emit execution started
+    emitter.emit(executionId, {
+     kind: "execution",
+     status: "STARTED",
+     executionId
+    });
+
+    // Run async (non-blocking)
     this.runAsync(definition, userId, executionId);
 
     return executionId;
@@ -61,13 +67,30 @@ export class ExecutionService {
         }
       });
 
+      // Emit completion
+      emitter.emit(executionId, {
+      kind: "execution",
+      status: "COMPLETED",
+      executionId
+      });
+
     } catch (error: any) {
+
       await prisma.execution.update({
         where: { executionId },
         data: {
           status: 'FAILED',
-          logs: { error: error.message } as any
+          logs: { error: error.message } as any,
+          completedAt: new Date()
         }
+      });
+
+      // Emit failure
+      emitter.emit(executionId, {
+        kind: "execution",
+        status: "FAILED",
+        executionId,
+        error: error.message
       });
     }
   }
