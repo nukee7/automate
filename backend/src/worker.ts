@@ -1,23 +1,27 @@
-import { Worker, Job } from "bullmq";
+import "./core/registry/register.node";
+import { Worker } from "bullmq";
 import { redisConnection } from "./core/queue/redis";
 import { processExecution } from "./core/engine/execution.processor";
 
 console.log("Worker started");
 
-new Worker(
+const worker = new Worker(
   "workflow-queue",
-  async (job: Job) => {
+  async (job) => {
     const { workflowId, userId, executionId } = job.data;
 
-    await processExecution(
-      workflowId,
-      userId,
-      executionId,
-      job
-    );
+    console.log("Processing execution:", executionId);
+
+    await processExecution(workflowId, userId, executionId, job);
   },
-  {
-    connection: redisConnection,
-    concurrency: 5
-  }
+  { connection: redisConnection }
 );
+
+worker.on("failed", (job, err) => {
+  console.error("Job failed:", job?.id);
+  console.error(err);
+});
+
+worker.on("completed", (job) => {
+  console.log("Job completed:", job.id);
+});

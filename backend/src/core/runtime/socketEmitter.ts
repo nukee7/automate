@@ -1,9 +1,15 @@
-import { getIO } from '../../config/socket';
-import { ExecutionEvent } from '../types/event';
+import { getIO } from "../../config/socket";
 
 export class SocketWorkflowEmitter {
-  emit(executionId: string, event: ExecutionEvent) {
-    const io = getIO();
-    io.to(executionId).emit('execution:event', event);
+
+  emit(executionId: string, payload: any) {
+    try {
+      const io = getIO();
+      io.to(executionId).emit("execution:event", payload);
+    } catch {
+      // Worker environment has no socket server
+      // So we silently skip websocket emission
+      return;
+    }
   }
 }
