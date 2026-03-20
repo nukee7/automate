@@ -12,10 +12,11 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import AINode from "./AINode";
+import EmailNode from "./EmailNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { useEffect } from "react";
 
-const nodeTypes = { ai: AINode };
+const nodeTypes = { ai: AINode, email: EmailNode };
 
 let nodeId = 0;
 const getId = () => `node_${++nodeId}`;
@@ -72,8 +73,10 @@ const WorkflowCanvasInner = () => {
         type,
         position,
         data: {
-          label: `AI Node`,
-          config: { prompt: "", model: "gemini", retries: 0 },
+          label: type === "email" ? "Email Node" : "AI Node",
+          config: type === "email"
+            ? { to: "", from: "", cc: "", bcc: "", subject: "", message: "", html: "", retries: 0 }
+            : { prompt: "", model: "gemini", retries: 0 },
         },
       };
 

@@ -1,7 +1,14 @@
 export interface NodeConfig {
-  prompt: string;
-  model: string;
+  prompt?: string;
+  model?: string;
   retries: number;
+  to?: string;
+  from?: string;
+  cc?: string;
+  bcc?: string;
+  subject?: string;
+  message?: string;
+  html?: string;
 }
 
 export interface WorkflowNode {

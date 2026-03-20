@@ -1,7 +1,8 @@
-import { Bot, GripVertical } from "lucide-react";
+import { Bot, GripVertical, Mail } from "lucide-react";
 
 const nodeTypes = [
   { type: "ai", label: "AI Node", icon: Bot, description: "Run AI inference" },
+  { type: "email", label: "Email Node", icon: Mail, description: "Send an email" },
 ];
 
 const NodePalette = () => {
