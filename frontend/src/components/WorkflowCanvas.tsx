@@ -4,9 +4,11 @@ import ReactFlow, {
   Controls,
   MiniMap,
   addEdge,
-  useNodesState,
-  useEdgesState,
+  applyNodeChanges,
+  applyEdgeChanges,
   Connection,
+  EdgeChange,
+  NodeChange,
   ReactFlowProvider,
   ReactFlowInstance,
 } from "reactflow";
@@ -14,7 +16,6 @@ import "reactflow/dist/style.css";
 import AINode from "./AINode";
 import EmailNode from "./EmailNode";
 import { useWorkflowStore } from "@/store/workflowStore";
-import { useEffect } from "react";
 
 const nodeTypes = { ai: AINode, email: EmailNode };
 
@@ -23,33 +24,36 @@ const getId = () => `node_${++nodeId}`;
 
 const WorkflowCanvasInner = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
 
-  const store = useWorkflowStore();
-
-  // Sync nodes/edges to store
-  useEffect(() => {
-    store.setNodes(nodes);
-  }, [nodes]);
-
-  useEffect(() => {
-    store.setEdges(edges);
-  }, [edges]);
+  const nodes = useWorkflowStore((s) => s.nodes);
+  const edges = useWorkflowStore((s) => s.edges);
+  const setNodes = useWorkflowStore((s) => s.setNodes);
+  const setEdges = useWorkflowStore((s) => s.setEdges);
+  const selectNode = useWorkflowStore((s) => s.selectNode);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
-    [setEdges]
+    (params: Connection) => setEdges(addEdge({ ...params, animated: true }, edges)),
+    [edges, setEdges]
+  );
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => setNodes(applyNodeChanges(changes, nodes)),
+    [nodes, setNodes]
+  );
+
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => setEdges(applyEdgeChanges(changes, edges)),
+    [edges, setEdges]
   );
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: any) => {
-    store.selectNode(node.id);
-  }, []);
+    selectNode(node.id);
+  }, [selectNode]);
 
   const onPaneClick = useCallback(() => {
-    store.selectNode(null);
-  }, []);
+    selectNode(null);
+  }, [selectNode]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -76,13 +80,13 @@ const WorkflowCanvasInner = () => {
           label: type === "email" ? "Email Node" : "AI Node",
           config: type === "email"
             ? { to: "", from: "", cc: "", bcc: "", subject: "", message: "", html: "", retries: 0 }
-            : { prompt: "", model: "gemini", retries: 0 },
+            : { prompt: "", retries: 0 },
         },
       };
 
-      setNodes((nds) => nds.concat(newNode));
+      setNodes(nodes.concat(newNode));
     },
-    [setNodes]
+    [nodes, setNodes]
   );
 
   return (

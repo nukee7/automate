@@ -1,9 +1,6 @@
 import prisma from '../config/prisma';
 import { randomUUID } from 'crypto';
 import { workflowQueue } from '../core/queue/workflow';
-import { SocketWorkflowEmitter } from '../core/runtime/socketEmitter';
-
-const emitter = new SocketWorkflowEmitter();
 
 export class ExecutionService {
 
@@ -28,11 +25,9 @@ export class ExecutionService {
       }
     });
 
-    emitter.emit(executionId, {
-      kind: "execution",
-      status: "STARTED",
-      executionId
-    });
+    // NOTE: No socket emit here — the client subscribes after receiving
+    // the executionId, and real events arrive via the socketBridge
+    // (which relays BullMQ worker progress events to socket.io).
 
     await workflowQueue.add(
       "workflow-execution",

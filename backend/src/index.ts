@@ -8,11 +8,25 @@ import workflowRoutes from './routes/workflow.route';
 import './core/registry/register.node';
 
 import { initSocket } from './config/socket';
+import { initSocketBridge } from './core/queue/socketBridge';
 import type { Socket } from 'socket.io';
 
 dotenv.config();
 
 const app = express();
+const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:8080';
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 app.use(express.json());
 
 // Create HTTP server
@@ -20,6 +34,9 @@ const server = http.createServer(app);
 
 // Initialize Socket.IO
 export const io = initSocket(server);
+
+// Bridge BullMQ worker events to Socket.IO
+initSocketBridge();
 
 // Routes
 app.use('/api/auth', authRoutes);

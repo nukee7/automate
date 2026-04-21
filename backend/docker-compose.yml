@@ -36,6 +36,19 @@ services:
 
 
   # ============================
+  # MailHog (Dev Email Catcher)
+  # ============================
+  mailhog:
+    image: mailhog/mailhog
+    container_name: taskpilot_mailhog
+    restart: always
+
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+
+  # ============================
   # Backend API
   # ============================
   backend:
@@ -53,6 +66,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - mailhog
 
     volumes:
       - .:/app

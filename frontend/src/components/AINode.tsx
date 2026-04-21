@@ -38,9 +38,6 @@ const AINode = ({ id, data, selected }: NodeProps) => {
         <p className="text-[11px] text-muted-foreground truncate max-w-[180px]">
           {data.config?.prompt || "No prompt set"}
         </p>
-        <p className="text-[10px] text-muted-foreground/60 mt-1 font-mono">
-          model: {data.config?.model || "gemini"}
-        </p>
       </div>
       <Handle type="target" position={Position.Left} className="!-left-[5px]" />
       <Handle type="source" position={Position.Right} className="!-right-[5px]" />

@@ -103,18 +103,6 @@ const NodeConfigPanel = () => {
                 placeholder="Enter AI prompt..."
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Model</label>
-              <select
-                value={config.model || "gemini"}
-                onChange={(e) => updateNodeConfig(selectedNode.id, { model: e.target.value })}
-                className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-              >
-                <option value="gemini">Gemini</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="claude">Claude</option>
-              </select>
-            </div>
           </>
         )}
         <div>

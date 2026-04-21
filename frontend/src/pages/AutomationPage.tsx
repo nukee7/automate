@@ -91,8 +91,9 @@ const AutomationPage = () => {
       // Save first, then execute
       const wf = await createWorkflow(workflowName, "", buildDefinition());
       const { executionId } = await executeWorkflow(wf.id);
-      setExecutionId(executionId);
+      // Subscribe to socket room immediately so no events are missed
       subscribeToExecution(executionId);
+      setExecutionId(executionId);
       addLog({ timestamp: new Date(), type: "execution", message: "Execution started", status: "STARTED" });
     } catch {
       setIsRunning(false);

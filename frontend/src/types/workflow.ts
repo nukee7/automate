@@ -1,6 +1,5 @@
 export interface NodeConfig {
   prompt?: string;
-  model?: string;
   retries: number;
   to?: string;
   from?: string;

@@ -1,14 +1,9 @@
 import { WorkflowDefinition } from '../types/workflow';
 import { nodeRegistry } from '../registry/node.registry';
 import { ExecutionContext } from '../runtime/context';
-import { SocketWorkflowEmitter } from '../runtime/socketEmitter';
 import { Job } from "bullmq";
 
 export class WorkflowExecutor {
-
-  constructor(
-    private emitter: SocketWorkflowEmitter
-  ) {}
 
   async execute(
     workflow: WorkflowDefinition,
@@ -46,18 +41,10 @@ export class WorkflowExecutor {
             `Executing node ${node.id}, attempt ${attempt}`
           );
 
-          // BullMQ execution progress: step started
           await job.updateProgress({
             executionStepId: node.id,
             executionStatus: "STARTED",
             attempt
-          });
-
-          // WebSocket node event
-          this.emitter.emit(executionId, {
-            kind: "node",
-            nodeId: node.id,
-            status: "STARTED"
           });
 
           const output = await implementation.run(
@@ -69,18 +56,9 @@ export class WorkflowExecutor {
 
           context.logs.push(`Node ${node.id} completed`);
 
-          // BullMQ execution progress: step success
           await job.updateProgress({
             executionStepId: node.id,
             executionStatus: "SUCCESS",
-            output
-          });
-
-          // WebSocket node event
-          this.emitter.emit(executionId, {
-            kind: "node",
-            nodeId: node.id,
-            status: "SUCCESS",
             output
           });
 
@@ -92,7 +70,6 @@ export class WorkflowExecutor {
             `Node ${node.id} failed: ${error.message}`
           );
 
-          // BullMQ execution progress: step failure
           await job.updateProgress({
             executionStepId: node.id,
             executionStatus: "FAILED",
@@ -101,14 +78,6 @@ export class WorkflowExecutor {
           });
 
           if (attempt > maxRetries) {
-
-            this.emitter.emit(executionId, {
-              kind: "node",
-              nodeId: node.id,
-              status: "FAILED",
-              error: error.message
-            });
-
             throw error;
           }
         }
@@ -116,11 +85,6 @@ export class WorkflowExecutor {
     }
 
     context.logs.push('Execution completed');
-
-    // Final execution progress
-    await job.updateProgress({
-      executionStatus: "COMPLETED"
-    });
 
     return context;
   }
