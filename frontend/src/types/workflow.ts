@@ -31,6 +31,7 @@ export interface Workflow {
   name: string;
   description: string;
   definition: WorkflowDefinition;
+  webhookToken?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

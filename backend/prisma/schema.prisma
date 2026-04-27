@@ -33,6 +33,8 @@ model Workflow {
 
   isActive Boolean @default(true)
 
+  webhookToken String? @unique
+
   userId String
 
   createdAt DateTime @default(now())

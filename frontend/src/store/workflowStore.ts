@@ -7,6 +7,7 @@ interface WorkflowState {
   selectedNodeId: string | null;
   workflowName: string;
   workflowDescription: string;
+  webhookToken: string | null;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   addNode: (node: Node) => void;
@@ -14,6 +15,7 @@ interface WorkflowState {
   selectNode: (nodeId: string | null) => void;
   setWorkflowName: (name: string) => void;
   setWorkflowDescription: (desc: string) => void;
+  setWebhookToken: (token: string | null) => void;
 }
 
 export const useWorkflowStore = create<WorkflowState>((set) => ({
@@ -22,6 +24,7 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
   selectedNodeId: null,
   workflowName: "Untitled Workflow",
   workflowDescription: "",
+  webhookToken: null,
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
   addNode: (node) => set((s) => ({ nodes: [...s.nodes, node] })),
@@ -34,4 +37,5 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
   selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
   setWorkflowName: (workflowName) => set({ workflowName }),
   setWorkflowDescription: (workflowDescription) => set({ workflowDescription }),
+  setWebhookToken: (webhookToken) => set({ webhookToken }),
 }));

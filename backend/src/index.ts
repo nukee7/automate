@@ -5,6 +5,7 @@ import http from 'http';
 import authRoutes from './routes/auth.route';
 import executionRoutes from './routes/execution.route';
 import workflowRoutes from './routes/workflow.route';
+import webhookRoutes from './routes/webhook.route';
 import './core/registry/register.node';
 
 import { initSocket } from './config/socket';
@@ -42,6 +43,7 @@ initSocketBridge();
 app.use('/api/auth', authRoutes);
 app.use('/api/executions', executionRoutes);
 app.use('/api/workflows', workflowRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 app.get('/', (_, res) => {
   res.send('TaskPilot API Running');

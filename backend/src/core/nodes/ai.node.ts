@@ -1,5 +1,6 @@
 import { BaseNode } from './base.node';
 import { GoogleGenAI } from '@google/genai';
+import { resolveExpressions } from '../expressions/resolver';
 
 export class AINode implements BaseNode {
   private client: GoogleGenAI;
@@ -41,7 +42,7 @@ return text;
 
   private resolveInput(context: any, config: any): string {
     if (config.prompt) {
-      return config.prompt;
+      return resolveExpressions(config.prompt, context.data);
     }
 
     if (config.inputNodeId) {

@@ -1,6 +1,7 @@
-import { Bot, GripVertical, Mail } from "lucide-react";
+import { Bot, GripVertical, Mail, Webhook } from "lucide-react";
 
 const nodeTypes = [
+  { type: "webhook_trigger", label: "Webhook Trigger", icon: Webhook, description: "Trigger via HTTP POST" },
   { type: "ai", label: "AI Node", icon: Bot, description: "Run AI inference" },
   { type: "email", label: "Email Node", icon: Mail, description: "Send an email" },
 ];

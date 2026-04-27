@@ -17,7 +17,7 @@ import { toast } from "sonner";
 const AutomationPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
-  const { nodes, edges, selectedNodeId, workflowName, setWorkflowName } = useWorkflowStore();
+  const { nodes, edges, selectedNodeId, workflowName, setWorkflowName, setWebhookToken } = useWorkflowStore();
   const { setExecutionId, setIsRunning, setNodeStatus, addLog, clearExecution } = useExecutionStore();
   const [saving, setSaving] = useState(false);
 
@@ -75,7 +75,10 @@ const AutomationPage = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await createWorkflow(workflowName, "", buildDefinition());
+      const wf = await createWorkflow(workflowName, "", buildDefinition());
+      if (wf.webhookToken) {
+        setWebhookToken(wf.webhookToken);
+      }
       toast.success("Workflow saved");
     } catch {
       toast.error("Failed to save workflow");
@@ -90,6 +93,9 @@ const AutomationPage = () => {
     try {
       // Save first, then execute
       const wf = await createWorkflow(workflowName, "", buildDefinition());
+      if (wf.webhookToken) {
+        setWebhookToken(wf.webhookToken);
+      }
       const { executionId } = await executeWorkflow(wf.id);
       // Subscribe to socket room immediately so no events are missed
       subscribeToExecution(executionId);

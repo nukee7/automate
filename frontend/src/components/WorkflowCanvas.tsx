@@ -15,9 +15,10 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import AINode from "./AINode";
 import EmailNode from "./EmailNode";
+import WebhookNode from "./WebhookNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 
-const nodeTypes = { ai: AINode, email: EmailNode };
+const nodeTypes = { ai: AINode, email: EmailNode, webhook_trigger: WebhookNode };
 
 let nodeId = 0;
 const getId = () => `node_${++nodeId}`;
@@ -72,15 +73,25 @@ const WorkflowCanvasInner = () => {
         y: event.clientY - bounds.top,
       });
 
+      const defaultConfigs: Record<string, any> = {
+        email: { to: "", from: "", cc: "", bcc: "", subject: "", message: "", html: "", retries: 0 },
+        webhook_trigger: { retries: 0 },
+        ai: { prompt: "", retries: 0 },
+      };
+
+      const labels: Record<string, string> = {
+        email: "Email Node",
+        webhook_trigger: "Webhook Trigger",
+        ai: "AI Node",
+      };
+
       const newNode = {
         id: getId(),
         type,
         position,
         data: {
-          label: type === "email" ? "Email Node" : "AI Node",
-          config: type === "email"
-            ? { to: "", from: "", cc: "", bcc: "", subject: "", message: "", html: "", retries: 0 }
-            : { prompt: "", retries: 0 },
+          label: labels[type] || type,
+          config: defaultConfigs[type] || { retries: 0 },
         },
       };
 

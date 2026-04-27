@@ -1,14 +1,29 @@
 import { useWorkflowStore } from "@/store/workflowStore";
-import { X } from "lucide-react";
+import { X, Copy, Check } from "lucide-react";
+import { useState } from "react";
 
 const NodeConfigPanel = () => {
-  const { nodes, selectedNodeId, updateNodeConfig, selectNode } = useWorkflowStore();
+  const { nodes, selectedNodeId, updateNodeConfig, selectNode, webhookToken } = useWorkflowStore();
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+  const [copied, setCopied] = useState(false);
 
   if (!selectedNode) return null;
 
   const config = selectedNode.data.config || {};
   const isEmailNode = selectedNode.type === "email";
+  const isWebhookTrigger = selectedNode.type === "webhook_trigger";
+
+  const webhookUrl = webhookToken
+    ? `${window.location.protocol}//${window.location.hostname}:${import.meta.env.VITE_API_PORT || 8000}/api/webhooks/${webhookToken}`
+    : null;
+
+  const handleCopyUrl = () => {
+    if (webhookUrl) {
+      navigator.clipboard.writeText(webhookUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="w-72 bg-panel border-l border-border flex flex-col h-full">
@@ -23,7 +38,39 @@ const NodeConfigPanel = () => {
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">Node ID</label>
           <p className="text-sm text-foreground font-mono bg-secondary rounded-md px-2.5 py-1.5 border border-border">{selectedNode.id}</p>
         </div>
-        {isEmailNode ? (
+        {isWebhookTrigger ? (
+          <>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Webhook URL</label>
+              {webhookUrl ? (
+                <div className="flex items-center gap-1.5">
+                  <p className="flex-1 text-xs text-foreground font-mono bg-secondary rounded-md px-2.5 py-1.5 border border-border break-all">
+                    {webhookUrl}
+                  </p>
+                  <button
+                    onClick={handleCopyUrl}
+                    className="shrink-0 p-1.5 rounded-md bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-status-success" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground/60 bg-secondary rounded-md px-2.5 py-1.5 border border-border">
+                  Save the workflow to generate a webhook URL
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Usage</label>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Send a POST request with a JSON body to the webhook URL. The payload is available in downstream nodes via{" "}
+                <code className="text-xs bg-secondary px-1 py-0.5 rounded border border-border">
+                  {"{{node.<id>.payload}}"}
+                </code>
+              </p>
+            </div>
+          </>
+        ) : isEmailNode ? (
           <>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">To</label>
@@ -105,17 +152,19 @@ const NodeConfigPanel = () => {
             </div>
           </>
         )}
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Retries</label>
-          <input
-            type="number"
-            min={0}
-            max={5}
-            value={config.retries ?? 0}
-            onChange={(e) => updateNodeConfig(selectedNode.id, { retries: parseInt(e.target.value) || 0 })}
-            className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-          />
-        </div>
+        {!isWebhookTrigger && (
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Retries</label>
+            <input
+              type="number"
+              min={0}
+              max={5}
+              value={config.retries ?? 0}
+              onChange={(e) => updateNodeConfig(selectedNode.id, { retries: parseInt(e.target.value) || 0 })}
+              className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

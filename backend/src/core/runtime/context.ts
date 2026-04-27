@@ -4,4 +4,6 @@ export interface ExecutionContext {
 
   data: Record<string, any>;
   logs: string[];
+
+  triggerPayload?: Record<string, any>;
 }

@@ -9,7 +9,8 @@ export async function processExecution(
   workflowId: string,
   userId: string,
   executionId: string,
-  job: Job
+  job: Job,
+  triggerPayload?: Record<string, any>
 ) {
 
   const workflow = await prisma.workflow.findUnique({
@@ -28,7 +29,8 @@ export async function processExecution(
       definition,
       userId,
       executionId,
-      job
+      job,
+      triggerPayload
     );
 
     await prisma.execution.update({

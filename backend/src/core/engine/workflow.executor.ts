@@ -9,7 +9,8 @@ export class WorkflowExecutor {
     workflow: WorkflowDefinition,
     userId: string,
     executionId: string,
-    job: Job
+    job: Job,
+    triggerPayload?: Record<string, any>
   ): Promise<ExecutionContext> {
 
     const context: ExecutionContext = {
@@ -17,6 +18,7 @@ export class WorkflowExecutor {
       userId,
       data: {},
       logs: [],
+      triggerPayload,
     };
 
     context.logs.push('Execution started');
