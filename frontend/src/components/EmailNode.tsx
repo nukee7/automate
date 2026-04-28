@@ -5,6 +5,7 @@ import { useExecutionStore } from "@/store/executionStore";
 
 const EmailNode = ({ id, data, selected }: NodeProps) => {
   const nodeStatus = useExecutionStore((s) => s.nodeStatuses[id]);
+  const nodeOutput = useExecutionStore((s) => s.nodeOutputs[id]);
 
   const statusClasses = {
     STARTED: "ring-2 ring-status-running animate-pulse-glow",
@@ -42,6 +43,14 @@ const EmailNode = ({ id, data, selected }: NodeProps) => {
           {data.config?.subject || "Taskpilot notification"}
         </p>
       </div>
+      {nodeOutput && (
+        <div className="px-3 py-2 border-t border-border bg-secondary/30">
+          <p className="text-[10px] font-medium text-muted-foreground mb-1">Output</p>
+          <p className="text-[11px] text-foreground/80 break-words">
+            {nodeOutput.success ? `Sent to ${nodeOutput.to}` : "Failed"}
+          </p>
+        </div>
+      )}
       <Handle type="target" position={Position.Left} className="!-left-[5px]" />
       <Handle type="source" position={Position.Right} className="!-right-[5px]" />
     </div>

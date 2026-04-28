@@ -5,6 +5,7 @@ import { useExecutionStore } from "@/store/executionStore";
 
 const WebhookNode = ({ id, data, selected }: NodeProps) => {
   const nodeStatus = useExecutionStore((s) => s.nodeStatuses[id]);
+  const nodeOutput = useExecutionStore((s) => s.nodeOutputs[id]);
 
   const statusClasses = {
     STARTED: "ring-2 ring-status-running animate-pulse-glow",
@@ -41,6 +42,16 @@ const WebhookNode = ({ id, data, selected }: NodeProps) => {
             : "Save workflow to get URL"}
         </p>
       </div>
+      {nodeOutput && (
+        <div className="px-3 py-2 border-t border-border bg-secondary/30">
+          <p className="text-[10px] font-medium text-muted-foreground mb-1">Payload</p>
+          <p className="text-[11px] text-foreground/80 max-h-[60px] overflow-y-auto break-words whitespace-pre-wrap font-mono">
+            {typeof nodeOutput.payload === "object"
+              ? JSON.stringify(nodeOutput.payload, null, 2)
+              : String(nodeOutput.payload ?? "")}
+          </p>
+        </div>
+      )}
       <Handle type="source" position={Position.Right} className="!-right-[5px]" />
     </div>
   );

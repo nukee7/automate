@@ -23,4 +23,5 @@ export interface LogEntry {
   message: string;
   status: string;
   nodeId?: string;
+  output?: any;
 }

@@ -18,7 +18,7 @@ const AutomationPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
   const { nodes, edges, selectedNodeId, workflowName, setWorkflowName, setWebhookToken } = useWorkflowStore();
-  const { setExecutionId, setIsRunning, setNodeStatus, addLog, clearExecution } = useExecutionStore();
+  const { setExecutionId, setIsRunning, setNodeStatus, setNodeOutput, addLog, clearExecution } = useExecutionStore();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -34,12 +34,16 @@ const AutomationPage = () => {
     const handler = (event: ExecutionSocketEvent) => {
       if (event.kind === "node") {
         setNodeStatus(event.nodeId, event.status);
+        if (event.status === "SUCCESS" && event.output !== undefined) {
+          setNodeOutput(event.nodeId, event.output);
+        }
         addLog({
           timestamp: new Date(),
           type: "node",
           message: `Node ${event.nodeId}: ${event.status}${event.error ? ` - ${event.error}` : ""}`,
           status: event.status,
           nodeId: event.nodeId,
+          output: event.status === "SUCCESS" ? event.output : undefined,
         });
       } else if (event.kind === "execution") {
         if (event.status === "COMPLETED" || event.status === "FAILED") {
