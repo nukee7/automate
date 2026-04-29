@@ -4,15 +4,14 @@ import { useAuthStore } from "@/store/authStore";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { useExecutionStore } from "@/store/executionStore";
 import { createWorkflow, updateWorkflow } from "@/api/workflows";
-import { executeWorkflow } from "@/api/executions";
-import { getSocket, subscribeToExecution, disconnectSocket } from "@/socket/socket";
+import { getSocket, subscribeToExecution, subscribeToWorkflow, unsubscribeFromWorkflow, disconnectSocket } from "@/socket/socket";
 import type { ExecutionSocketEvent } from "@/types/execution";
 import NodePalette from "@/components/NodePalette";
 import WorkflowCanvas from "@/components/WorkflowCanvas";
 import NodeConfigPanel from "@/components/NodeConfigPanel";
 import ExecutionLogs from "@/components/ExecutionLogs";
 import RightSidebar from "@/components/RightSidebar";
-import { Zap, Play, Save, LogOut } from "lucide-react";
+import { Zap, Save, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const AutomationPage = () => {
@@ -65,6 +64,30 @@ const AutomationPage = () => {
     };
   }, []);
 
+  // Auto-subscribe to workflow room for live webhook executions
+  useEffect(() => {
+    if (!workflowId) return;
+
+    const socket = getSocket();
+    subscribeToWorkflow(workflowId);
+
+    const handler = ({ executionId }: { executionId: string; workflowId: string }) => {
+      clearExecution();
+      setIsRunning(true);
+      subscribeToExecution(executionId);
+      setExecutionId(executionId);
+      addLog({ timestamp: new Date(), type: "execution", message: "Webhook triggered", status: "STARTED" });
+      toast.info("Webhook execution started");
+    };
+
+    socket.on("workflow:new-execution", handler);
+
+    return () => {
+      unsubscribeFromWorkflow(workflowId);
+      socket.off("workflow:new-execution", handler);
+    };
+  }, [workflowId]);
+
   const buildDefinition = () => ({
     nodes: nodes.map((n) => ({
       id: n.id,
@@ -99,25 +122,6 @@ const AutomationPage = () => {
     }
   };
 
-  const handleRun = async () => {
-    clearExecution();
-    setIsRunning(true);
-    try {
-      // Save first, then execute
-      const wf = await saveWorkflow();
-      setWorkflowId(wf.id);
-      setWebhookToken(wf.webhookToken ?? null);
-      const { executionId } = await executeWorkflow(wf.id);
-      // Subscribe to socket room immediately so no events are missed
-      subscribeToExecution(executionId);
-      setExecutionId(executionId);
-      addLog({ timestamp: new Date(), type: "execution", message: "Execution started", status: "STARTED" });
-    } catch {
-      setIsRunning(false);
-      toast.error("Failed to run workflow");
-    }
-  };
-
   const handleLogout = () => {
     logout();
     disconnectSocket();
@@ -147,17 +151,10 @@ const AutomationPage = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/80 transition-colors border border-border"
+            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
           >
             <Save className="w-3.5 h-3.5" />
             {saving ? "Saving..." : "Save"}
-          </button>
-          <button
-            onClick={handleRun}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-          >
-            <Play className="w-3.5 h-3.5" />
-            Run
           </button>
           <button
             onClick={handleLogout}

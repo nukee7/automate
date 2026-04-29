@@ -57,6 +57,14 @@ io.on('connection', (socket) => {
     socket.join(executionId);
   });
 
+  socket.on('workflow:subscribe', (workflowId: string) => {
+    socket.join(`workflow:${workflowId}`);
+  });
+
+  socket.on('workflow:unsubscribe', (workflowId: string) => {
+    socket.leave(`workflow:${workflowId}`);
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });

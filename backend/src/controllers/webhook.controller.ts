@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as workflowService from '../services/workflow.service';
 import { executionService } from '../services/execution.service';
+import { getIO } from '../config/socket';
 
 export const ingestWebhook = async (req: Request, res: Response) => {
   try {
@@ -17,6 +18,13 @@ export const ingestWebhook = async (req: Request, res: Response) => {
       workflow.userId,
       req.body
     );
+
+    // Notify any frontend clients watching this workflow
+    const io = getIO();
+    io.to(`workflow:${workflow.id}`).emit('workflow:new-execution', {
+      executionId,
+      workflowId: workflow.id,
+    });
 
     return res.status(202).json({ executionId });
   } catch {

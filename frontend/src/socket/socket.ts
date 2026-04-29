@@ -21,6 +21,16 @@ export const subscribeToExecution = (executionId: string) => {
   s.emit("execution:subscribe", executionId);
 };
 
+export const subscribeToWorkflow = (workflowId: string) => {
+  const s = getSocket();
+  s.emit("workflow:subscribe", workflowId);
+};
+
+export const unsubscribeFromWorkflow = (workflowId: string) => {
+  const s = getSocket();
+  s.emit("workflow:unsubscribe", workflowId);
+};
+
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();

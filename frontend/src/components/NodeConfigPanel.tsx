@@ -1,11 +1,18 @@
 import { useWorkflowStore } from "@/store/workflowStore";
-import { X, Copy, Check } from "lucide-react";
+import { useExecutionStore } from "@/store/executionStore";
+import { subscribeToExecution } from "@/socket/socket";
+import { X, Copy, Check, Play } from "lucide-react";
 import { useState } from "react";
+import axios from "axios";
 
 const NodeConfigPanel = () => {
   const { nodes, selectedNodeId, updateNodeConfig, selectNode, webhookToken } = useWorkflowStore();
+  const { setExecutionId, setIsRunning, clearExecution } = useExecutionStore();
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const [copied, setCopied] = useState(false);
+  const [testPayload, setTestPayload] = useState('{\n  "event": "test",\n  "data": "hello"\n}');
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   if (!selectedNode) return null;
 
@@ -22,6 +29,35 @@ const NodeConfigPanel = () => {
       navigator.clipboard.writeText(webhookUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookUrl) return;
+    setTestLoading(true);
+    setTestResult(null);
+    clearExecution();
+    setIsRunning(true);
+    try {
+      let body: any;
+      try {
+        body = JSON.parse(testPayload);
+      } catch {
+        setTestResult("Invalid JSON");
+        setTestLoading(false);
+        setIsRunning(false);
+        return;
+      }
+      const res = await axios.post(webhookUrl, body);
+      const { executionId } = res.data;
+      subscribeToExecution(executionId);
+      setExecutionId(executionId);
+      setTestResult(`Triggered: ${executionId.slice(0, 8)}...`);
+    } catch {
+      setTestResult("Failed to send");
+      setIsRunning(false);
+    } finally {
+      setTestLoading(false);
     }
   };
 
@@ -69,6 +105,31 @@ const NodeConfigPanel = () => {
                 </code>
               </p>
             </div>
+            {webhookUrl && (
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Test Webhook</label>
+                <textarea
+                  value={testPayload}
+                  onChange={(e) => setTestPayload(e.target.value)}
+                  rows={5}
+                  className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none placeholder:text-muted-foreground"
+                  placeholder='{"key": "value"}'
+                />
+                <button
+                  onClick={handleTestWebhook}
+                  disabled={testLoading}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <Play className="w-3 h-3" />
+                  {testLoading ? "Sending..." : "Send Test"}
+                </button>
+                {testResult && (
+                  <p className={`mt-1.5 text-[10px] font-mono ${testResult.startsWith("Triggered") ? "text-status-success" : "text-status-error"}`}>
+                    {testResult}
+                  </p>
+                )}
+              </div>
+            )}
           </>
         ) : isEmailNode ? (
           <>
