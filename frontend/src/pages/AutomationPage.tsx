@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { useExecutionStore } from "@/store/executionStore";
-import { createWorkflow } from "@/api/workflows";
+import { createWorkflow, updateWorkflow } from "@/api/workflows";
 import { executeWorkflow } from "@/api/executions";
 import { getSocket, subscribeToExecution, disconnectSocket } from "@/socket/socket";
 import type { ExecutionSocketEvent } from "@/types/execution";
@@ -11,13 +11,14 @@ import NodePalette from "@/components/NodePalette";
 import WorkflowCanvas from "@/components/WorkflowCanvas";
 import NodeConfigPanel from "@/components/NodeConfigPanel";
 import ExecutionLogs from "@/components/ExecutionLogs";
+import RightSidebar from "@/components/RightSidebar";
 import { Zap, Play, Save, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const AutomationPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
-  const { nodes, edges, selectedNodeId, workflowName, setWorkflowName, setWebhookToken } = useWorkflowStore();
+  const { nodes, edges, selectedNodeId, workflowName, setWorkflowName, setWebhookToken, setWorkflowId, workflowId } = useWorkflowStore();
   const { setExecutionId, setIsRunning, setNodeStatus, setNodeOutput, addLog, clearExecution } = useExecutionStore();
   const [saving, setSaving] = useState(false);
 
@@ -76,13 +77,20 @@ const AutomationPage = () => {
     })),
   });
 
+  const saveWorkflow = async () => {
+    const def = buildDefinition();
+    if (workflowId) {
+      return updateWorkflow(workflowId, workflowName, "", def);
+    }
+    return createWorkflow(workflowName, "", def);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const wf = await createWorkflow(workflowName, "", buildDefinition());
-      if (wf.webhookToken) {
-        setWebhookToken(wf.webhookToken);
-      }
+      const wf = await saveWorkflow();
+      setWorkflowId(wf.id);
+      setWebhookToken(wf.webhookToken ?? null);
       toast.success("Workflow saved");
     } catch {
       toast.error("Failed to save workflow");
@@ -96,10 +104,9 @@ const AutomationPage = () => {
     setIsRunning(true);
     try {
       // Save first, then execute
-      const wf = await createWorkflow(workflowName, "", buildDefinition());
-      if (wf.webhookToken) {
-        setWebhookToken(wf.webhookToken);
-      }
+      const wf = await saveWorkflow();
+      setWorkflowId(wf.id);
+      setWebhookToken(wf.webhookToken ?? null);
       const { executionId } = await executeWorkflow(wf.id);
       // Subscribe to socket room immediately so no events are missed
       subscribeToExecution(executionId);
@@ -168,7 +175,7 @@ const AutomationPage = () => {
           <WorkflowCanvas />
           <ExecutionLogs />
         </div>
-        {selectedNodeId && <NodeConfigPanel />}
+        {selectedNodeId ? <NodeConfigPanel /> : <RightSidebar />}
       </div>
     </div>
   );

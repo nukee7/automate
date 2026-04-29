@@ -21,6 +21,54 @@ export const createWorkflow = async (
   }
 };
 
+export const getUserWorkflows = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = (req as any).userId as string;
+    const workflows = await workflowService.getUserWorkflows(userId);
+    return res.json(workflows);
+  } catch {
+    return res.status(500).json({
+      error: 'Failed to fetch workflows'
+    });
+  }
+};
+
+export const updateWorkflow = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = (req as any).userId as string;
+    const id = req.params.id as string;
+
+    const workflow = await workflowService.updateWorkflow(id, req.body, userId);
+    return res.json(workflow);
+  } catch {
+    return res.status(500).json({
+      error: 'Failed to update workflow'
+    });
+  }
+};
+
+export const deleteWorkflow = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = (req as any).userId as string;
+    const id = req.params.id as string;
+    await workflowService.deleteWorkflow(id, userId);
+    return res.json({ success: true });
+  } catch {
+    return res.status(500).json({
+      error: 'Failed to delete workflow'
+    });
+  }
+};
+
 export const getWorkflow = async (
   req: Request,
   res: Response

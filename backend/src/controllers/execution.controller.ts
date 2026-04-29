@@ -54,6 +54,43 @@ export const getExecution = async (
 };
 
 /**
+ * Delete an execution
+ */
+export const deleteExecution = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = (req as any).userId as string;
+    const executionId = req.params.executionId as string;
+    await executionService.deleteExecution(executionId, userId);
+    return res.json({ success: true });
+  } catch {
+    return res.status(500).json({
+      error: 'Failed to delete execution'
+    });
+  }
+};
+
+/**
+ * Get all executions for the authenticated user
+ */
+export const getUserExecutions = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = (req as any).userId as string;
+    const executions = await executionService.getUserExecutions(userId);
+    return res.json(executions);
+  } catch {
+    return res.status(500).json({
+      error: 'Failed to fetch executions'
+    });
+  }
+};
+
+/**
  * Get all executions for a workflow
  */
 export const getWorkflowExecutions = async (

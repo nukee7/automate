@@ -44,6 +44,27 @@ export class ExecutionService {
     });
   }
 
+  async getUserExecutions(userId: string) {
+    return prisma.execution.findMany({
+      where: { userId },
+      orderBy: { startedAt: 'desc' },
+      take: 50,
+      include: {
+        workflow: {
+          select: { name: true }
+        }
+      }
+    });
+  }
+
+  async deleteExecution(executionId: string, userId: string) {
+    const execution = await prisma.execution.findUnique({ where: { executionId } });
+    if (!execution || execution.userId !== userId) {
+      throw new Error('Execution not found');
+    }
+    return prisma.execution.delete({ where: { executionId } });
+  }
+
   async getWorkflowExecutions(workflowId: string) {
     return prisma.execution.findMany({
       where: { workflowId },
