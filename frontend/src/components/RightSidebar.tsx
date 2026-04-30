@@ -35,7 +35,7 @@ interface WorkflowSummary {
 const RightSidebar = () => {
   const workflowId = useWorkflowStore((s) => s.workflowId);
   const { setNodes, setEdges, setWorkflowName, setWorkflowId, setWebhookToken } = useWorkflowStore();
-  const { setNodeOutput, setNodeStatus, setExecutionId, clearExecution } = useExecutionStore();
+  const { setNodeOutput, setNodeStatus, setExecutionId, addLog, clearExecution } = useExecutionStore();
 
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
   const [wfLoading, setWfLoading] = useState(false);
@@ -64,13 +64,19 @@ const RightSidebar = () => {
 
   // ─── Toggle workflow dropdown ─────────────────────
 
-  const toggleWorkflow = async (wfId: string) => {
-    if (expandedWfId === wfId) {
+  const toggleWorkflow = async (wf: WorkflowSummary) => {
+    // If already expanded, just collapse
+    if (expandedWfId === wf.id) {
       setExpandedWfId(null);
       return;
     }
-    setExpandedWfId(wfId);
-    await fetchExecutionsFor(wfId);
+
+    // Load workflow onto canvas + expand executions
+    setExpandedWfId(wf.id);
+    await Promise.all([
+      handleLoadWorkflow(wf),
+      fetchExecutionsFor(wf.id),
+    ]);
   };
 
   const fetchExecutionsFor = async (wfId: string) => {
@@ -87,8 +93,7 @@ const RightSidebar = () => {
 
   // ─── Load workflow onto canvas ────────────────────
 
-  const handleLoadWorkflow = async (e: React.MouseEvent, wf: WorkflowSummary) => {
-    e.stopPropagation();
+  const handleLoadWorkflow = async (wf: WorkflowSummary) => {
     try {
       const full = await getWorkflow(wf.id);
       const def = full.definition;
@@ -129,12 +134,34 @@ const RightSidebar = () => {
     setSelectedExecId(exec.executionId);
     setExecutionId(exec.executionId);
 
+    // Load node outputs onto canvas
     if (exec.data && typeof exec.data === "object") {
       for (const [nodeId, output] of Object.entries(exec.data)) {
         setNodeOutput(nodeId, output);
         setNodeStatus(nodeId, exec.status === "FAILED" ? "FAILED" : "SUCCESS");
       }
     }
+
+    // Load logs into execution log panel
+    const timestamp = new Date(exec.startedAt);
+    if (Array.isArray(exec.logs) && exec.logs.length > 0) {
+      for (const log of exec.logs) {
+        addLog({
+          timestamp,
+          type: log.includes("Node") || log.includes("node") ? "node" : "execution",
+          message: log,
+          status: log.includes("failed") || log.includes("Error") ? "FAILED" : log.includes("completed") ? "SUCCESS" : "STARTED",
+        });
+      }
+    }
+
+    // Always add final status
+    addLog({
+      timestamp: exec.completedAt ? new Date(exec.completedAt) : timestamp,
+      type: "execution",
+      message: `Execution ${exec.status}`,
+      status: exec.status,
+    });
   };
 
   // ─── Delete handlers ──────────────────────────────
@@ -254,7 +281,7 @@ const RightSidebar = () => {
               <div key={wf.id}>
                 {/* Workflow row */}
                 <div
-                  onClick={() => toggleWorkflow(wf.id)}
+                  onClick={() => toggleWorkflow(wf)}
                   className={`w-full text-left p-2 rounded-lg cursor-pointer transition-all ${
                     isActive
                       ? "bg-secondary border border-primary/30"
@@ -267,14 +294,6 @@ const RightSidebar = () => {
                       : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
                     }
                     <p className="text-xs font-medium text-foreground truncate flex-1">{wf.name}</p>
-                    <span
-                      role="button"
-                      onClick={(e) => handleLoadWorkflow(e, wf)}
-                      className="shrink-0 text-[10px] text-primary hover:text-primary/80 transition-colors px-1"
-                      title="Load workflow"
-                    >
-                      Open
-                    </span>
                     <span
                       role="button"
                       onClick={(e) => handleDeleteWorkflow(e, wf.id)}
@@ -291,7 +310,7 @@ const RightSidebar = () => {
 
                 {/* Executions dropdown */}
                 {isExpanded && (
-                  <div className="ml-3 pl-3 border-l border-border/50 mt-1 mb-2 space-y-1">
+                  <div onClick={(e) => e.stopPropagation()} className="ml-3 pl-3 border-l border-border/50 mt-1 mb-2 space-y-1">
                     {isLoadingExecs ? (
                       <div className="flex items-center gap-2 p-2">
                         <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />

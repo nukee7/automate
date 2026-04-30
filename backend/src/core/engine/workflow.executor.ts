@@ -92,7 +92,9 @@ export class WorkflowExecutor {
           });
 
           if (attempt > maxRetries) {
-            throw error;
+            const err: any = new Error(error.message);
+            err.partialContext = context;
+            throw err;
           }
         }
       }

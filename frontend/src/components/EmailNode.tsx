@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { Mail } from "lucide-react";
 import { useExecutionStore } from "@/store/executionStore";
+import NodeDeleteButton from "./NodeDeleteButton";
 
 const EmailNode = ({ id, data, selected }: NodeProps) => {
   const nodeStatus = useExecutionStore((s) => s.nodeStatuses[id]);
@@ -14,6 +15,8 @@ const EmailNode = ({ id, data, selected }: NodeProps) => {
   };
 
   return (
+    <div className="group relative">
+      <NodeDeleteButton nodeId={id} />
     <div
       className={`
         min-w-[220px] rounded-xl bg-card border border-node-border shadow-lg shadow-black/20 overflow-hidden transition-all
@@ -53,6 +56,7 @@ const EmailNode = ({ id, data, selected }: NodeProps) => {
       )}
       <Handle type="target" position={Position.Left} className="!-left-[5px]" />
       <Handle type="source" position={Position.Right} className="!-right-[5px]" />
+    </div>
     </div>
   );
 };

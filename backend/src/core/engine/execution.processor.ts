@@ -25,8 +25,10 @@ export async function processExecution(
   const definition =
     workflow.definition as unknown as WorkflowDefinition;
 
+  let result: { data: Record<string, any>; logs: string[] } | null = null;
+
   try {
-    const result = await executor.execute(
+    result = await executor.execute(
       definition,
       userId,
       executionId,
@@ -49,11 +51,15 @@ export async function processExecution(
     await job.updateProgress({ executionStatus: "COMPLETED", executionId });
 
     return result;
-  } catch (error) {
+  } catch (error: any) {
+    // Save partial data and logs even on failure
+    const partial = error.partialContext;
     await prisma.execution.update({
       where: { executionId },
       data: {
         status: "FAILED",
+        data: (partial?.data ?? {}) as any,
+        logs: [...(partial?.logs ?? []), `Error: ${error.message}`] as any,
         completedAt: new Date()
       }
     }).catch(() => {});

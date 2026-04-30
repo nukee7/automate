@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -40,6 +40,14 @@ const WorkflowCanvasInner = () => {
   const setNodes = useWorkflowStore((s) => s.setNodes);
   const setEdges = useWorkflowStore((s) => s.setEdges);
   const selectNode = useWorkflowStore((s) => s.selectNode);
+  const workflowId = useWorkflowStore((s) => s.workflowId);
+
+  // Fit view when a workflow is loaded
+  useEffect(() => {
+    if (reactFlowInstance.current && nodes.length > 0) {
+      setTimeout(() => reactFlowInstance.current?.fitView({ padding: 0.2 }), 50);
+    }
+  }, [workflowId]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges(addEdge({ ...params, animated: true }, edges)),

@@ -92,6 +92,7 @@ const AutomationPage = () => {
     nodes: nodes.map((n) => ({
       id: n.id,
       type: n.type || "ai",
+      position: n.position,
       config: n.data.config || {},
     })),
     edges: edges.map((e) => ({
