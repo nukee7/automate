@@ -155,7 +155,7 @@ const AutomationPage = () => {
             className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
           >
             <Save className="w-3.5 h-3.5" />
-            {saving ? "Saving..." : "Save"}
+            {saving ? "Saving..." : "Save Workflow"}
           </button>
           <button
             onClick={handleLogout}
