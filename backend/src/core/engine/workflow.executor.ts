@@ -25,12 +25,22 @@ export class WorkflowExecutor {
 
     context.logs.push('Execution started');
 
+    // Build reverse adjacency: nodeId -> list of upstream node IDs
+    const upstreamMap = new Map<string, string[]>();
+    for (const edge of workflow.edges) {
+      if (!upstreamMap.has(edge.to)) {
+        upstreamMap.set(edge.to, []);
+      }
+      upstreamMap.get(edge.to)!.push(edge.from);
+    }
+
     const sortedNodes = this.topologicalSort(workflow);
 
     for (const node of sortedNodes) {
 
       const implementation = nodeRegistry.get(node.type);
       const maxRetries = node.config?.retries ?? 0;
+      const _upstreamNodeIds = upstreamMap.get(node.id) || [];
 
       let attempt = 0;
       let success = false;
@@ -53,7 +63,7 @@ export class WorkflowExecutor {
 
           const output = await implementation.run(
             context,
-            node.config
+            { ...node.config, _upstreamNodeIds }
           );
 
           context.data[node.id] = output;

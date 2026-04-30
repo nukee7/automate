@@ -265,8 +265,11 @@ const NodeConfigPanel = () => {
                 onChange={(e) => updateNodeConfig(selectedNode.id, { prompt: e.target.value })}
                 rows={4}
                 className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none placeholder:text-muted-foreground"
-                placeholder="Enter AI prompt..."
+                placeholder="e.g. Summarize this GitHub push event"
               />
+              <p className="text-[10px] text-muted-foreground/60 mt-1.5 leading-relaxed">
+                Data from the previous node is automatically included. Just describe what you want the AI to do.
+              </p>
             </div>
           </>
         )}
