@@ -13,10 +13,17 @@ export const ingestWebhook = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Webhook not found' });
     }
 
+    const triggerHeaders: Record<string, string> = {};
+    for (const key of ['x-github-event', 'x-github-delivery', 'x-slack-signature', 'x-slack-request-timestamp']) {
+      const val = req.headers[key];
+      if (typeof val === 'string') triggerHeaders[key] = val;
+    }
+
     const executionId = await executionService.start(
       workflow.id,
       workflow.userId,
-      req.body
+      req.body,
+      triggerHeaders
     );
 
     // Notify any frontend clients watching this workflow

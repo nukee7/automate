@@ -16,9 +16,17 @@ import "reactflow/dist/style.css";
 import AINode from "./AINode";
 import EmailNode from "./EmailNode";
 import WebhookNode from "./WebhookNode";
+import GithubNode from "./GithubNode";
+import SlackNode from "./SlackNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 
-const nodeTypes = { ai: AINode, email: EmailNode, webhook_trigger: WebhookNode };
+const nodeTypes = {
+  ai: AINode,
+  email: EmailNode,
+  webhook_trigger: WebhookNode,
+  github_trigger: GithubNode,
+  slack_trigger: SlackNode,
+};
 
 let nodeId = 0;
 const getId = () => `node_${++nodeId}`;
@@ -76,12 +84,16 @@ const WorkflowCanvasInner = () => {
       const defaultConfigs: Record<string, any> = {
         email: { to: "", from: "", cc: "", bcc: "", subject: "", message: "", html: "", retries: 0 },
         webhook_trigger: { retries: 0 },
+        github_trigger: { retries: 0 },
+        slack_trigger: { retries: 0 },
         ai: { prompt: "", retries: 0 },
       };
 
       const labels: Record<string, string> = {
         email: "Email Node",
         webhook_trigger: "Webhook Trigger",
+        github_trigger: "GitHub Trigger",
+        slack_trigger: "Slack Trigger",
         ai: "AI Node",
       };
 

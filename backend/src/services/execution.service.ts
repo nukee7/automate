@@ -4,7 +4,7 @@ import { workflowQueue } from '../core/queue/workflow';
 
 export class ExecutionService {
 
-  async start(workflowId: string, userId: string, triggerPayload?: Record<string, any>) {
+  async start(workflowId: string, userId: string, triggerPayload?: Record<string, any>, triggerHeaders?: Record<string, string>) {
 
     const workflow = await prisma.workflow.findUnique({
       where: { id: workflowId }
@@ -31,7 +31,7 @@ export class ExecutionService {
 
     await workflowQueue.add(
       "workflow-execution",
-      { workflowId, userId, executionId, triggerPayload },
+      { workflowId, userId, executionId, triggerPayload, triggerHeaders },
       { jobId: executionId }
     );
 

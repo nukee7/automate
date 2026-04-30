@@ -18,7 +18,9 @@ const NodeConfigPanel = () => {
 
   const config = selectedNode.data.config || {};
   const isEmailNode = selectedNode.type === "email";
-  const isWebhookTrigger = selectedNode.type === "webhook_trigger";
+  const TRIGGER_TYPES = ["webhook_trigger", "github_trigger", "slack_trigger"];
+  const isTriggerNode = TRIGGER_TYPES.includes(selectedNode.type || "");
+  const triggerType = selectedNode.type;
 
   const webhookUrl = webhookToken
     ? `${window.location.protocol}//${window.location.hostname}:${import.meta.env.VITE_API_PORT || 8000}/api/webhooks/${webhookToken}`
@@ -74,7 +76,7 @@ const NodeConfigPanel = () => {
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">Node ID</label>
           <p className="text-sm text-foreground font-mono bg-secondary rounded-md px-2.5 py-1.5 border border-border">{selectedNode.id}</p>
         </div>
-        {isWebhookTrigger ? (
+        {isTriggerNode ? (
           <>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">Webhook URL</label>
@@ -96,18 +98,73 @@ const NodeConfigPanel = () => {
                 </p>
               )}
             </div>
+            {triggerType === "github_trigger" && (
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Setup</label>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Paste the webhook URL in your GitHub repo → Settings → Webhooks. Set content type to <code className="text-xs bg-secondary px-1 py-0.5 rounded border border-border">application/json</code>.
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+                  Parsed fields: <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">event</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">repository</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">sender</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">commits</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">branch</code>
+                </p>
+              </div>
+            )}
+            {triggerType === "slack_trigger" && (
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Setup</label>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Use this URL as the Request URL in your Slack app → Event Subscriptions. Subscribe to the events you need.
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+                  Parsed fields: <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">eventType</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">channel</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">user</code>{" "}
+                  <code className="text-[10px] bg-secondary px-1 py-0.5 rounded border border-border">text</code>
+                </p>
+              </div>
+            )}
+            {triggerType === "webhook_trigger" && (
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Usage</label>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Send a POST request with a JSON body. The full payload is available via{" "}
+                  <code className="text-xs bg-secondary px-1 py-0.5 rounded border border-border">
+                    {"{{node.<id>.payload}}"}
+                  </code>
+                </p>
+              </div>
+            )}
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Usage</label>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Send a POST request with a JSON body to the webhook URL. The payload is available in downstream nodes via{" "}
-                <code className="text-xs bg-secondary px-1 py-0.5 rounded border border-border">
-                  {"{{node.<id>.payload}}"}
-                </code>
-              </p>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Access in downstream nodes</label>
+              <div className="space-y-1">
+                {triggerType === "github_trigger" && (
+                  <>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".event}}"}</code>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".repository}}"}</code>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".commits}}"}</code>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".raw}}"}</code>
+                  </>
+                )}
+                {triggerType === "slack_trigger" && (
+                  <>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".eventType}}"}</code>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".text}}"}</code>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".channel}}"}</code>
+                    <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".raw}}"}</code>
+                  </>
+                )}
+                {triggerType === "webhook_trigger" && (
+                  <code className="block text-[10px] bg-secondary px-2 py-1 rounded border border-border text-foreground/70 font-mono">{"{{node." + selectedNode.id + ".payload}}"}</code>
+                )}
+              </div>
             </div>
             {webhookUrl && (
               <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Test Webhook</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Test</label>
                 <textarea
                   value={testPayload}
                   onChange={(e) => setTestPayload(e.target.value)}
@@ -213,7 +270,7 @@ const NodeConfigPanel = () => {
             </div>
           </>
         )}
-        {!isWebhookTrigger && (
+        {!isTriggerNode && (
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1.5">Retries</label>
             <input

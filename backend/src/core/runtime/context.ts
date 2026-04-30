@@ -6,4 +6,5 @@ export interface ExecutionContext {
   logs: string[];
 
   triggerPayload?: Record<string, any>;
+  triggerHeaders?: Record<string, string>;
 }

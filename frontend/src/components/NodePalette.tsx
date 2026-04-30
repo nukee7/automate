@@ -1,7 +1,9 @@
-import { Bot, GripVertical, Mail, Webhook } from "lucide-react";
+import { Bot, GripVertical, Mail, Webhook, Github, MessageSquare } from "lucide-react";
 
 const nodeTypes = [
-  { type: "webhook_trigger", label: "Webhook Trigger", icon: Webhook, description: "Trigger via HTTP POST" },
+  { type: "github_trigger", label: "GitHub Trigger", icon: Github, description: "Trigger on GitHub events" },
+  { type: "slack_trigger", label: "Slack Trigger", icon: MessageSquare, description: "Trigger on Slack events" },
+  { type: "webhook_trigger", label: "Webhook", icon: Webhook, description: "Generic HTTP POST trigger" },
   { type: "ai", label: "AI Node", icon: Bot, description: "Run AI inference" },
   { type: "email", label: "Email Node", icon: Mail, description: "Send an email" },
 ];

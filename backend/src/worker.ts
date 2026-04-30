@@ -8,11 +8,11 @@ console.log("Worker started");
 const worker = new Worker(
   "workflow-queue",
   async (job) => {
-    const { workflowId, userId, executionId, triggerPayload } = job.data;
+    const { workflowId, userId, executionId, triggerPayload, triggerHeaders } = job.data;
 
     console.log("Processing execution:", executionId);
 
-    await processExecution(workflowId, userId, executionId, job, triggerPayload);
+    await processExecution(workflowId, userId, executionId, job, triggerPayload, triggerHeaders);
   },
   { connection: redisConnection }
 );

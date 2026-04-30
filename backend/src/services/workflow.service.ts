@@ -1,9 +1,11 @@
 import prisma from '../config/prisma';
 import { randomUUID } from 'crypto';
 
+const TRIGGER_TYPES = ['webhook_trigger', 'github_trigger', 'slack_trigger'];
+
 function hasWebhookTrigger(definition: any): boolean {
   return Array.isArray(definition?.nodes) &&
-    definition.nodes.some((n: any) => n.type === 'webhook_trigger');
+    definition.nodes.some((n: any) => TRIGGER_TYPES.includes(n.type));
 }
 
 export async function createWorkflow(data: any, userId: string) {

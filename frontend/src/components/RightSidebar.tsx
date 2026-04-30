@@ -98,7 +98,7 @@ const RightSidebar = () => {
         type: n.type,
         position: n.position || { x: 100 + i * 300, y: 200 },
         data: {
-          label: n.type === "email" ? "Email Node" : n.type === "webhook_trigger" ? "Webhook Trigger" : "AI Node",
+          label: { email: "Email Node", webhook_trigger: "Webhook Trigger", github_trigger: "GitHub Trigger", slack_trigger: "Slack Trigger", ai: "AI Node" }[n.type] || n.type,
           config: n.config || {},
         },
       }));
