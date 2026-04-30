@@ -49,6 +49,14 @@ app.get('/', (_, res) => {
   res.send('TaskPilot API Running');
 });
 
+app.get('/api/ai-providers', (_, res) => {
+  res.json([
+    { key: 'gemini', label: 'Google Gemini', models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'], defaultModel: 'gemini-2.5-flash' },
+    { key: 'openai', label: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'], defaultModel: 'gpt-4o-mini' },
+    { key: 'anthropic', label: 'Anthropic Claude', models: ['claude-sonnet-4-20250514', 'claude-haiku-4-20250414', 'claude-3-5-sonnet-20241022'], defaultModel: 'claude-sonnet-4-20250514' },
+  ]);
+});
+
 // Socket Handler
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);

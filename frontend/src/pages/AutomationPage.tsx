@@ -173,8 +173,11 @@ const AutomationPage = () => {
           <WorkflowCanvas />
           <ExecutionLogs />
         </div>
-        {selectedNodeId ? <NodeConfigPanel /> : <RightSidebar />}
+        <RightSidebar />
       </div>
+
+      {/* Node config modal */}
+      {selectedNodeId && <NodeConfigPanel />}
     </div>
   );
 };
