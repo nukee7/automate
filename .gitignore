@@ -67,3 +67,5 @@ ARCHITECTURE.md
 *.bak
 *.old
 *.tgz
+
+.claude
