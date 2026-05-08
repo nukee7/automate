@@ -1,6 +1,7 @@
-FROM node:20-bullseye
+FROM node:20-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends msmtp && \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    msmtp openssl ca-certificates && \
     rm -rf /var/lib/apt/lists/* && \
     ln -sf /usr/bin/msmtp /usr/sbin/sendmail
 
@@ -10,7 +11,6 @@ COPY msmtprc /etc/msmtprc
 RUN chmod 644 /etc/msmtprc
 
 COPY package*.json ./
-
 RUN npm install
 
 COPY . .
@@ -19,4 +19,4 @@ RUN npx prisma generate
 
 EXPOSE 8000
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
