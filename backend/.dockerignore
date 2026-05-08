@@ -2,5 +2,4 @@ node_modules
 .env
 .git
 dist
-prisma/migrations
 npm-debug.log
