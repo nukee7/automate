@@ -1,7 +1,7 @@
 import { useWorkflowStore } from "@/store/workflowStore";
 import { useExecutionStore } from "@/store/executionStore";
 import { subscribeToExecution } from "@/socket/socket";
-import { X, Copy, Check, Play, Settings, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { X, Copy, Check, Play, Settings, ArrowDownToLine, ArrowUpFromLine, Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
 
@@ -16,6 +16,7 @@ const NodeConfigPanel = () => {
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("settings");
+  const [mcpExpanded, setMcpExpanded] = useState(false);
 
   if (!selectedNode) return null;
 
@@ -157,6 +158,27 @@ const NodeConfigPanel = () => {
     }
 
     if (isAINode) {
+      const mcpServers: Array<{ url: string; name?: string }> = config.mcpServers || [];
+
+      const addMcpServer = () => {
+        updateNodeConfig(selectedNode.id, {
+          mcpServers: [...mcpServers, { url: "", name: "" }],
+        });
+      };
+
+      const updateMcpServer = (index: number, field: string, value: string) => {
+        const updated = mcpServers.map((s, i) =>
+          i === index ? { ...s, [field]: value } : s
+        );
+        updateNodeConfig(selectedNode.id, { mcpServers: updated });
+      };
+
+      const removeMcpServer = (index: number) => {
+        updateNodeConfig(selectedNode.id, {
+          mcpServers: mcpServers.filter((_, i) => i !== index),
+        });
+      };
+
       return (
         <>
           <div>
@@ -205,13 +227,95 @@ const NodeConfigPanel = () => {
             <textarea
               value={config.prompt || ""}
               onChange={(e) => updateNodeConfig(selectedNode.id, { prompt: e.target.value })}
-              rows={5}
+              rows={4}
               className={textareaClass}
-              placeholder="e.g. Summarize this GitHub push event"
+              placeholder="e.g. Triage this GitHub issue, check for duplicates, assign priority"
             />
             <p className="text-[10px] text-muted-foreground/60 mt-1.5">
-              Data from the previous node is automatically included.
+              Your instruction. Data from the previous node is automatically included.
             </p>
+          </div>
+
+          {/* MCP Tool Servers */}
+          <div className="border border-border rounded-lg overflow-hidden">
+            <button
+              onClick={() => setMcpExpanded(!mcpExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2.5 bg-secondary/50 hover:bg-secondary transition-colors"
+            >
+              <span className="text-xs font-medium text-muted-foreground">
+                MCP Tool Servers
+                {mcpServers.length > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[9px]">
+                    {mcpServers.length}
+                  </span>
+                )}
+              </span>
+              {mcpExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+            </button>
+
+            {mcpExpanded && (
+              <div className="p-3 space-y-3 border-t border-border">
+                <p className="text-[10px] text-muted-foreground/60">
+                  Connect MCP servers to give the AI access to external tools (GitHub, Slack, databases, etc.)
+                </p>
+
+                {mcpServers.map((server, index) => (
+                  <div key={index} className="space-y-2 p-2.5 rounded-lg bg-secondary/50 border border-border">
+                    <div>
+                      <label className="block text-[10px] font-medium text-muted-foreground mb-1">Server URL</label>
+                      <input
+                        value={server.url || ""}
+                        onChange={(e) => updateMcpServer(index, "url", e.target.value)}
+                        className={inputClass}
+                        placeholder="https://api.githubcopilot.com/mcp"
+                      />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-1">Name (optional)</label>
+                        <input
+                          value={server.name || ""}
+                          onChange={(e) => updateMcpServer(index, "name", e.target.value)}
+                          className={inputClass}
+                          placeholder="e.g. github"
+                        />
+                      </div>
+                      <button
+                        onClick={() => removeMcpServer(index)}
+                        className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-status-error hover:border-status-error/50 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  onClick={addMcpServer}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 h-8 rounded-lg border border-dashed border-border text-muted-foreground text-xs hover:text-foreground hover:border-foreground/30 transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Server
+                </button>
+
+                {mcpServers.length > 0 && (
+                  <div>
+                    <label className="block text-[10px] font-medium text-muted-foreground mb-1">Max Tool Rounds</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={config.maxToolRounds ?? 10}
+                      onChange={(e) => updateNodeConfig(selectedNode.id, { maxToolRounds: parseInt(e.target.value) || 10 })}
+                      className={inputClass}
+                    />
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      Maximum number of tool call rounds before forcing a final answer.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </>
       );

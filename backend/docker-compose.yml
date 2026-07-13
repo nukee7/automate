@@ -14,7 +14,7 @@ services:
       POSTGRES_DB: taskpilot_db
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -63,6 +63,11 @@ services:
     env_file:
       - .env
 
+    environment:
+      DATABASE_URL: postgresql://nikhil:taskpilot@postgres:5432/taskpilot_db
+      REDIS_HOST: redis
+      FRONTEND_ORIGIN: http://localhost:8081
+
     depends_on:
       - postgres
       - redis
@@ -85,6 +90,10 @@ services:
 
     env_file:
       - .env
+
+    environment:
+      DATABASE_URL: postgresql://nikhil:taskpilot@postgres:5432/taskpilot_db
+      REDIS_HOST: redis
 
     depends_on:
       - postgres
