@@ -142,10 +142,17 @@ export function formatAnthropicToolResult(tc: ToolCall, result: McpToolResult): 
 }
 
 export function formatGeminiToolResult(tc: ToolCall, result: McpToolResult): any {
+  // Must carry role + parts: ai.node.ts passes messages with `parts` through
+  // untouched, and maps everything else via `{ text: m.content }`.
   return {
-    functionResponse: {
-      name: tc.name,
-      response: { result: mcpResultToText(result) },
-    },
+    role: 'user',
+    parts: [
+      {
+        functionResponse: {
+          name: tc.name,
+          response: { result: mcpResultToText(result) },
+        },
+      },
+    ],
   };
 }
