@@ -158,7 +158,8 @@ const NodeConfigPanel = () => {
     }
 
     if (isAINode) {
-      const mcpServers: Array<{ url: string; name?: string }> = config.mcpServers || [];
+      const mcpServers: Array<{ url: string; name?: string; headers?: Record<string, string> }> =
+        config.mcpServers || [];
 
       const addMcpServer = () => {
         updateNodeConfig(selectedNode.id, {
@@ -170,6 +171,17 @@ const NodeConfigPanel = () => {
         const updated = mcpServers.map((s, i) =>
           i === index ? { ...s, [field]: value } : s
         );
+        updateNodeConfig(selectedNode.id, { mcpServers: updated });
+      };
+
+      const updateMcpServerToken = (index: number, token: string) => {
+        const updated = mcpServers.map((s, i) => {
+          if (i !== index) return s;
+          const { headers: _drop, ...rest } = s;
+          return token.trim()
+            ? { ...rest, headers: { Authorization: `Bearer ${token.trim()}` } }
+            : rest;
+        });
         updateNodeConfig(selectedNode.id, { mcpServers: updated });
       };
 
@@ -268,6 +280,18 @@ const NodeConfigPanel = () => {
                         onChange={(e) => updateMcpServer(index, "url", e.target.value)}
                         className={inputClass}
                         placeholder="https://api.githubcopilot.com/mcp"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-muted-foreground mb-1">
+                        Auth Token (optional)
+                      </label>
+                      <input
+                        type="password"
+                        value={(server.headers?.Authorization || "").replace(/^Bearer /, "")}
+                        onChange={(e) => updateMcpServerToken(index, e.target.value)}
+                        className={inputClass}
+                        placeholder="github_pat_... — sent as Authorization: Bearer"
                       />
                     </div>
                     <div className="flex items-end gap-2">

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "@/api/auth";
+import { register } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
 import { Bot, Zap } from "lucide-react";
 
-const LoginPage = () => {
+const RegisterPage = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,13 +17,23 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     try {
-      const { token } = await login(email, password);
+      const { token } = await register(email, password, name.trim() || undefined);
       setToken(token);
       navigate("/app");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Login failed");
+      setError(err.response?.data?.error || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -44,11 +56,23 @@ const LoginPage = () => {
 
         <div className="bg-card border border-border rounded-xl p-8 shadow-2xl shadow-black/20">
           <div className="text-center mb-6">
-            <h2 className="text-xl font-semibold text-foreground">Welcome back</h2>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to your automation workspace</p>
+            <h2 className="text-xl font-semibold text-foreground">Create your account</h2>
+            <p className="text-sm text-muted-foreground mt-1">Start building automated workflows</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Name <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+                placeholder="Ada Lovelace"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
               <input
@@ -67,6 +91,17 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+                placeholder="At least 8 characters"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Confirm password</label>
+              <input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
                 placeholder="••••••••"
                 required
               />
@@ -83,14 +118,14 @@ const LoginPage = () => {
               disabled={loading}
               className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary hover:underline">
-              Create one
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary hover:underline">
+              Sign in
             </Link>
           </p>
         </div>
@@ -103,4 +138,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
