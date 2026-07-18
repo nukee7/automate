@@ -7,6 +7,10 @@ let socket: Socket | null = null;
 export const getSocket = (): Socket => {
   if (!socket) {
     socket = io(SOCKET_URL, {
+      // Skip HTTP long-polling — Render's proxy resets held-open polling
+      // connections over HTTP/2 (ERR_HTTP2_PING_FAILED / ERR_CONNECTION_RESET).
+      // WebSocket connects directly and is supported on Render.
+      transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,

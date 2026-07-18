@@ -27,9 +27,10 @@ const NodeConfigPanel = () => {
   const isAINode = selectedNode.type === "ai";
   const triggerType = selectedNode.type;
 
-  const webhookUrl = webhookToken
-    ? `${window.location.protocol}//${window.location.hostname}:${import.meta.env.VITE_API_PORT || 8000}/api/webhooks/${webhookToken}`
-    : null;
+  const apiBase =
+    import.meta.env.VITE_API_BASE_URL ||
+    `${window.location.protocol}//${window.location.hostname}:8000/api`;
+  const webhookUrl = webhookToken ? `${apiBase}/webhooks/${webhookToken}` : null;
 
   // Find upstream nodes
   const upstreamNodeIds = edges.filter((e) => e.target === selectedNode.id).map((e) => e.source);
