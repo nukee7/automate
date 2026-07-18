@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
+    return res.sendStatus(204); 
   }
 
   next();
@@ -51,7 +51,7 @@ app.get('/', (_, res) => {
 
 app.get('/api/ai-providers', (_, res) => {
   res.json([
-    { key: 'gemini', label: 'Google Gemini', models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'], defaultModel: 'gemini-2.5-flash' },
+    { key: 'gemini', label: 'Google Gemini', models: ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-pro', 'gemini-3.1-flash-lite'], defaultModel: 'gemini-flash-latest' },
     { key: 'openai', label: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'], defaultModel: 'gpt-4o-mini' },
     { key: 'anthropic', label: 'Anthropic Claude', models: ['claude-sonnet-4-20250514', 'claude-haiku-4-20250414', 'claude-3-5-sonnet-20241022'], defaultModel: 'claude-sonnet-4-20250514' },
   ]);

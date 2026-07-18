@@ -200,7 +200,7 @@ const NodeConfigPanel = () => {
               value={config.provider || "gemini"}
               onChange={(e) => {
                 const provider = e.target.value;
-                const defaults: Record<string, string> = { gemini: "gemini-2.5-flash", openai: "gpt-4o-mini", anthropic: "claude-sonnet-4-20250514" };
+                const defaults: Record<string, string> = { gemini: "gemini-flash-latest", openai: "gpt-4o-mini", anthropic: "claude-sonnet-4-20250514" };
                 updateNodeConfig(selectedNode.id, { provider, model: defaults[provider] || "" });
               }}
               className={inputClass}
@@ -219,7 +219,7 @@ const NodeConfigPanel = () => {
             >
               {(config.provider === "openai" ? ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"] :
                 config.provider === "anthropic" ? ["claude-sonnet-4-20250514", "claude-haiku-4-20250414", "claude-3-5-sonnet-20241022"] :
-                ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"]
+                ["gemini-flash-latest", "gemini-3.5-flash", "gemini-2.5-pro", "gemini-3.1-flash-lite"]
               ).map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}
