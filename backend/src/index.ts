@@ -83,3 +83,13 @@ const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on ${PORT}`);
 });
+
+// Optionally run the BullMQ worker in this same process. Used for
+// single-service deploys (e.g. Render free tier) where a dedicated
+// Background Worker isn't available. Locally, docker-compose runs the
+// worker as its own container, so leave EMBED_WORKER unset there.
+if (process.env.EMBED_WORKER === 'true') {
+  import('./worker')
+    .then(() => console.log('🧵 Embedded worker started in web process'))
+    .catch((err) => console.error('Failed to start embedded worker:', err));
+}
